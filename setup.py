@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
 
+install_requires = ["requests>=2.27.1"]
+
 with open("README.md") as f:
     readme = f.read()
 
@@ -16,4 +18,6 @@ setup(
     url="https://github.com/patricklubach/python-terraform-registry",
     license=license,
     packages=find_packages(exclude=("tests", "docs")),
+    install_requires=install_requires,
+    python_requires=">=3.6",
 )
