@@ -1,45 +1,16 @@
 from dataclasses import dataclass
 from typing import Any
 
-from requests import Response, request
+from . import helpers
 
-from . import utils
+# from requests import Response, request
 
 
 @dataclass
-class Module:
+class Modules:
     """Base class for a Terraform Registry Module service."""
 
     name: str = "modules.v1"
-
-    def _endpoint(self) -> str:
-        """Returns the endpoint path of the given service."""
-
-        services = utils.list()
-        return services.get(self.name, "")
-
-    def _uri(self):
-        """Returns the full uri of the service."""
-
-        return "/".join([utils.BASE_URL, self._endpoint()])
-
-    def _url(self, *args: str) -> str:
-        return "/".join(args)
-
-    def _call(self, *args: str, **kwargs: Any) -> Response:
-        """
-        Calls the Terraform Registry API with specified parameter
-        and returns requests.Response object.
-        """
-
-        path = "/".join([arg for arg in args])
-        url = self._url(self._uri(), path)
-        params: dict[str, Any] = {}
-
-        for key, value in kwargs:
-            params[key] = value
-
-        return request("GET", url, params=params)
 
     def download(
         self, namespace: str, name: str, provider: str, version: str
@@ -47,13 +18,15 @@ class Module:
         """Returns the download url for a single module."""
 
         endpoint = "download"
-        response = self._call(namespace, name, provider, version, endpoint)
+        response = helpers.call(
+            self.name, namespace, name, provider, version, endpoint
+        )
         return response.headers.get("x-terraform-get", "")
 
     def get(
         self, namespace: str, name: str, provider: str, version: str
     ) -> str:
-        response = self._call(namespace, name, provider, version)
+        response = helpers.call(self.name, namespace, name, provider, version)
         return response.json()
 
     def latest(
@@ -62,7 +35,7 @@ class Module:
         """Returns the latest version of a single module."""
 
         params: dict[str, Any] = {"offset": offset}
-        response = self._call(namespace, name, params=params)
+        response = helpers.call(self.name, namespace, name, params=params)
         return response.json()
 
     def latest_provider(
@@ -73,23 +46,24 @@ class Module:
         that are available for the module.
         """
 
-        response = self._call(namespace, name, provider)
+        response = helpers.call(self.name, namespace, name, provider)
         return response.json()
 
     def list(
         self,
         namespace: str = "",
         offset: int = 0,
-        provider: None = None,
+        provider: str = "",
         verified: bool = True,
     ):
         """Returns list of modules according to criteria."""
+
         params: dict[str, Any] = {}
         params["offset"] = offset
         params["provider"] = provider
         params["verified"] = verified
 
-        response = self._call(namespace, params=params)
+        response = helpers.call(self.name, namespace, params=params)
         return response.json()
 
     def search(
@@ -101,18 +75,17 @@ class Module:
         verified: bool = True,
     ) -> dict[str, Any]:
         """Returns modules, that matches criteria."""
+
         endpoint = "search"
 
-        params: dict[str, Any] = {
-            "name": name,
-            "namespace": namespace,
-            "offset": offset,
-            "provider": provider,
-        }
+        params: dict[str, Any] = {}
+        params["q"] = name
+        params["namespace"] = namespace
+        params["offset"] = offset
+        params["provider"] = provider
+        params["verified"] = verified
 
-        response = request(
-            "GET", f"{utils.BASE_URL}/{endpoint}", params=params
-        )
+        response = helpers.call(self.name, endpoint, params=params)
         return response.json()
 
     def versions(
@@ -120,6 +93,6 @@ class Module:
     ) -> dict[str, Any]:
         """Returns all available versions of a module."""
         endpoint = "versions"
-        url = f"{utils.BASE_URL}/{namespace}/{name}/{provider}/{endpoint}"
-        response = request("GET", url)
+
+        response = helpers.call(self.name, namespace, name, provider, endpoint)
         return response.json()

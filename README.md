@@ -27,7 +27,7 @@ Python >= 3.7
 The library is being tested by using `unittest`. You can run the tests by executing:
 
 ```bash
-python -m unittest
+make test
 ```
 
 in the root directory.

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Provider:
+class Providers:
     """Base class for a Terraform provider."""
 
-    pass
+    name: str = "providers.v1"
