@@ -55,7 +55,7 @@ class Modules:
         offset: int = 0,
         provider: str = "",
         verified: bool = True,
-    ):
+    ) -> dict[str, Any]:
         """Returns list of modules according to criteria."""
 
         params: dict[str, Any] = {}
